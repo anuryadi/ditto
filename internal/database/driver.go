@@ -23,6 +23,8 @@ type Driver interface {
 	// Data operations
 	Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	Execute(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	TruncateTable(ctx context.Context, tableName string) error
+	GetMaxColumnValue(ctx context.Context, tableName string, columnName string) (interface{}, error)
 
 	// Batch operations
 	BulkInsert(ctx context.Context, tableName string, columns []string, rows [][]interface{}) error
