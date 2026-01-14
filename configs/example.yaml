@@ -1,0 +1,41 @@
+# Example ditto configuration file
+# Copy this file to ~/.ditto.yaml or use --config flag
+
+# Source database configuration
+source:
+  driver: postgres
+  host: localhost
+  port: 5432
+  database: source_db
+  user: postgres
+  password: ${DB_SOURCE_PASSWORD}  # Can use environment variables
+  sslmode: disable
+
+# Target database configuration  
+target:
+  driver: mysql
+  host: localhost
+  port: 3306
+  database: target_db
+  user: root
+  password: ${DB_TARGET_PASSWORD}
+
+# Sync configuration
+sync:
+  strategy: full  # Options: full, incremental
+  batch_size: 1000
+  tables:
+    - name: users
+      primary_key: id
+      timestamp_column: updated_at
+    - name: orders
+      primary_key: id
+      timestamp_column: modified_at
+    - name: products
+      primary_key: id
+
+# Logging configuration
+logging:
+  level: info    # Options: debug, info, warn, error
+  format: console # Options: console, json
+  output: stdout  # Options: stdout, stderr, or file path
