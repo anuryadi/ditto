@@ -7,10 +7,6 @@
 
 > 🔄 A powerful CLI tool for database synchronization between PostgreSQL and MySQL
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/arinuryadi/ditto/main/assets/demo.gif" alt="ditto demo" width="600">
-</p>
-
 ## ✨ Features
 
 - **Schema Comparison** - Compare table structures, columns, indexes, and constraints
@@ -40,9 +36,11 @@ make build
 
 Download pre-built binaries from the [Releases](https://github.com/anuryadi/ditto/releases) page.
 
-## 📖 Quick Start
+## 📖 Usage
 
-### Compare Database Schemas
+### 1. Compare Database Schemas
+
+Compare table structures between two databases to identify differences.
 
 ```bash
 # Compare PostgreSQL to MySQL
@@ -50,7 +48,12 @@ ditto compare \
   --source "postgres://user:pass@localhost:5432/source_db" \
   --target "mysql://user:pass@localhost:3306/target_db"
 
-# Output to JSON
+# Compare PostgreSQL to PostgreSQL (e.g., prod vs staging)
+ditto compare \
+  --source "postgres://user:pass@prod-server:5432/myapp" \
+  --target "postgres://user:pass@staging-server:5432/myapp"
+
+# Output differences to JSON file
 ditto compare \
   --source "postgres://user:pass@localhost/db1" \
   --target "mysql://user:pass@localhost/db2" \
@@ -58,23 +61,70 @@ ditto compare \
   --output diff.json
 ```
 
-### Sync Data Between Databases
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `-s, --source` | Source database connection string (required) |
+| `-t, --target` | Target database connection string (required) |
+| `-f, --format` | Output format: `table`, `json` (default: table) |
+| `-o, --output` | Save output to file |
+
+---
+
+### 2. Sync Data Between Databases
+
+Synchronize data from source to target database.
 
 ```bash
-# Full sync
+# Full sync (truncate target + copy all data)
 ditto sync \
   --source "postgres://user:pass@localhost/source" \
   --target "mysql://user:pass@localhost/target" \
-  --tables users,orders,products
+  --tables users,orders,products \
+  --strategy full
 
-# Dry run (preview without changes)
+# Incremental sync (copy only new/modified rows)
+ditto sync \
+  --source "postgres://user:pass@localhost/source" \
+  --target "mysql://user:pass@localhost/target" \
+  --tables orders \
+  --strategy incremental
+
+# Dry run (preview without making changes)
 ditto sync \
   --source "postgres://..." \
   --target "mysql://..." \
+  --tables users \
   --dry-run
+
+# Force sync without confirmation prompt
+ditto sync \
+  --source "postgres://..." \
+  --target "mysql://..." \
+  --tables users \
+  --strategy full \
+  --force
 ```
 
-### Export Table Data
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `-s, --source` | Source database connection string (required) |
+| `-t, --target` | Target database connection string (required) |
+| `--tables` | Comma-separated list of tables to sync |
+| `--strategy` | Sync strategy: `full`, `incremental` (default: full) |
+| `--dry-run` | Preview changes without executing |
+| `--force` | Skip confirmation prompt for destructive operations |
+
+**Strategies:**
+- **full**: Truncates target table and copies all data from source. Best for small tables or initial sync.
+- **incremental**: Copies only new rows based on primary key or timestamp. Best for large tables with frequent updates.
+
+---
+
+### 3. Export Table Data
+
+Export data from a database table to various formats.
 
 ```bash
 # Export to JSON
@@ -90,7 +140,43 @@ ditto export \
   --table orders \
   --format csv \
   --output orders.csv
+
+# Export to SQL (INSERT statements)
+ditto export \
+  --source "postgres://user:pass@localhost/db" \
+  --table products \
+  --format sql \
+  --output products.sql
+
+# Export with custom query
+ditto export \
+  --source "postgres://user:pass@localhost/db" \
+  --query "SELECT id, name, email FROM users WHERE active = true" \
+  --format json \
+  --output active_users.json
+
+# Export to stdout (for piping)
+ditto export \
+  --source "postgres://..." \
+  --table users \
+  --format csv
 ```
+
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `-s, --source` | Source database connection string (required) |
+| `--table` | Table name to export |
+| `--query` | Custom SQL query (overrides --table) |
+| `-f, --format` | Output format: `json`, `csv`, `sql` (default: json) |
+| `-o, --output` | Output file path (default: stdout) |
+
+**Output Formats:**
+- **json**: JSON object with metadata (table name, row count, data array)
+- **csv**: Standard comma-separated values with header row
+- **sql**: SQL INSERT statements ready for import
+
+---
 
 ## ⚙️ Configuration
 
@@ -128,7 +214,7 @@ logging:
   format: console
 ```
 
-## 🔧 Commands
+## 🔧 Commands Reference
 
 | Command | Description |
 |---------|-------------|
@@ -212,5 +298,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/arinuryadi">Ari Nuryadi</a>
+  Made with ❤️ by <a href="https://github.com/anuryadi">Ari Nuryadi</a>
 </p>
